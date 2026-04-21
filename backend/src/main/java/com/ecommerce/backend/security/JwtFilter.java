@@ -27,21 +27,25 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getServletPath();
+
+        // 🔥 IMPORTANT: Skip login & register
+        if (path.startsWith("/api/auth")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader("Authorization");
 
-        // 🔹 Check if header exists and starts with Bearer
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
 
             String token = authHeader.substring(7);
 
-            // 🔹 Validate token
             if (jwtUtil.validateToken(token)) {
 
-                // 🔹 Extract email & role from token
                 String email = jwtUtil.extractEmail(token);
                 String role = jwtUtil.extractRole(token);
 
-                // 🔹 Create authentication with dynamic role
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 email,
@@ -51,7 +55,6 @@ public class JwtFilter extends OncePerRequestFilter {
                                 )
                         );
 
-                // 🔹 Set authentication in context
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }

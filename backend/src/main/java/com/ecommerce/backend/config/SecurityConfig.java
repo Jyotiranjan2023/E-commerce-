@@ -2,7 +2,6 @@ package com.ecommerce.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -24,11 +23,10 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-            		.requestMatchers("/api/auth/**").permitAll()
-            		.requestMatchers("/api/products").hasRole("ADMIN") // POST protected
-            		.requestMatchers("/api/products/**").permitAll()
-            		.anyRequest().authenticated()
-            	)
+                .requestMatchers("/api/auth/**").permitAll() // ✅ FIX
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
