@@ -3,6 +3,7 @@ package com.ecommerce.backend.service;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.ecommerce.backend.model.User;
@@ -18,13 +19,24 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // 🔹 Register User
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    // 🔹 Register (Encrypt password)
     @Override
     public User registerUser(User user) {
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        // Default role
+        if (user.getRole() == null) {
+            user.setRole("USER");
+        }
+
         return userRepository.save(user);
     }
 
-    // 🔹 Login User (JWT)
+    // 🔹 Login (Compare encrypted password)
     @Override
     public String login(String email, String password) {
 
@@ -33,9 +45,8 @@ public class UserServiceImpl implements UserService {
         if (userOpt.isPresent()) {
             User user = userOpt.get();
 
-            // ⚠️ Plain password check (we will secure later)
-            if (user.getPassword().equals(password)) {
-                return jwtUtil.generateToken(email);
+            if (passwordEncoder.matches(password, user.getPassword())) {
+                return jwtUtil.generateToken(user.getEmail(), user.getRole());
             }
         }
 
